@@ -1,2 +1,12 @@
-# place
-The official place (DCISM version) repository. DCISM place, inspired by r/place, was a collaborative art project and social experiment on Reddit where users could place a single pixel on a large digital canvas every few minutes, leading to massive, shared pixel art over a limited time.
+# DCISM r/place
+
+### A collaborative pixel canvas platform inspired by Reddit's r/place, built specifically for DCISM students.
+![Tech Stack](https://skills.syvixor.com/api/icons?perline=15&i=reactjs,vite,zustand,socketio,expressjs,postgresql,redis,tailwindcss,axios,typescript)
+
+## Access at
+- https://place.dcism.org
+
+
+---
+### Made for fun
+Developed by Matt Cabarrubias

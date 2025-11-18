@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# PM2
+.pm2
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
