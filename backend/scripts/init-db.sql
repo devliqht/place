@@ -10,18 +10,23 @@ DROP TABLE IF EXISTS users CASCADE;
 -- Users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    school_id VARCHAR(8) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_token TEXT,
+    verification_expires_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total_pixels_placed INTEGER DEFAULT 0,
 
     -- Constraints
-    CONSTRAINT check_school_id_format CHECK (school_id ~ '^[0-9]{8}$')
+    CONSTRAINT check_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@usc\.edu\.ph$')
 );
 
--- Index for fast school ID lookups
-CREATE INDEX idx_users_school_id ON users(school_id);
+-- Index for fast email lookups
+CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_last_seen ON users(last_seen DESC);
+CREATE INDEX idx_users_verification_token ON users(verification_token) WHERE verification_token IS NOT NULL;
 
 -- Pixel history (for moderation and audit trail)
 CREATE TABLE pixel_history (
@@ -65,7 +70,7 @@ CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 -- Admin actions log
 CREATE TABLE admin_logs (
     id SERIAL PRIMARY KEY,
-    admin_school_id VARCHAR(8) NOT NULL,
+    admin_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(50) NOT NULL,
     target_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     details JSONB,
@@ -73,7 +78,7 @@ CREATE TABLE admin_logs (
 );
 
 -- Index for admin activity tracking
-CREATE INDEX idx_admin_logs_admin ON admin_logs(admin_school_id, created_at DESC);
+CREATE INDEX idx_admin_logs_admin ON admin_logs(admin_user_id, created_at DESC);
 CREATE INDEX idx_admin_logs_created_at ON admin_logs(created_at DESC);
 
 -- Function to automatically update user's last_seen timestamp
@@ -136,7 +141,7 @@ FROM pixel_history;
 -- Create a view for user leaderboard
 CREATE OR REPLACE VIEW user_leaderboard AS
 SELECT
-    u.school_id,
+    u.email,
     u.total_pixels_placed,
     u.created_at,
     u.last_seen,
