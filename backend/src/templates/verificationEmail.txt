@@ -1,0 +1,13 @@
+Welcome to DCISM place!
+
+Thank you for registering with your USC email address. To activate your account and start painting on the canvas, please verify your email address by visiting this link:
+
+{{VERIFICATION_URL}}
+
+This verification link will expire in 24 hours. If the link expires, you can request a new verification email from the login page.
+
+This email was sent to {{USER_EMAIL}}
+
+If you didn't create an account on DCISM place, you can safely ignore this email.
+
+Your pixels will be tracked by your email for moderation purposes.
