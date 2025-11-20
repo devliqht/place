@@ -1,8 +1,6 @@
-DEPLOYMENT.md
-FIRST_PROMPT.md
-PLAN.md
-TYPESCRIPT.md
 CLAUDE.md
+docs/
 **.env.development
 **.env.production
 **.env.example
+**.env
