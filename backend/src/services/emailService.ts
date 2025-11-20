@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
-import { getVerificationEmailTemplate } from '../utils/emailTemplates.js';
+import { getVerificationEmailTemplate } from '../utils/emailTemplates';
 
 let transporter: Transporter | null = null;
 

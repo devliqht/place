@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "node build.js",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint .",
@@ -13,7 +13,12 @@
     "init-db": "psql -U placeadmin -d place -h localhost -f scripts/init-db.sql",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["place", "canvas", "websocket", "real-time"],
+  "keywords": [
+    "place",
+    "canvas",
+    "websocket",
+    "real-time"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -44,6 +49,7 @@
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.6",
+    "esbuild": "^0.24.2",
     "globals": "^16.5.0",
     "nodemon": "^3.1.11",
     "tsx": "^4.20.6",
