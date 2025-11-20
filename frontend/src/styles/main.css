@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+* {
+  font-family: 'DM Mono', monospace;
+}
+
+.canvas-container canvas {
+  touch-action: none;
+}
+
+@layer base {
+	button {
+		@apply hover:cursor-pointer;
+	}
+}
