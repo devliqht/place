@@ -1,11 +1,24 @@
 export interface User {
   id: number;
-  schoolId: string;
+  email: string;
+  emailVerified: boolean;
   createdAt: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
 export interface LoginRequest {
-  schoolId: string;
+  email: string;
+  password: string;
 }
 
 export interface LoginResponse {
@@ -64,7 +77,12 @@ export interface SocketPixelUpdate {
   y: number;
   color: string;
   userId?: number;
-  schoolId?: string;
+  email?: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface SocketUserCount {
@@ -97,7 +115,7 @@ export interface PixelHistoryResponse {
 
 export interface UserActivity {
   user: {
-    schoolId: string;
+    email: string;
     createdAt: string;
     lastSeen: string;
     totalPixelsPlaced: number;
@@ -140,8 +158,8 @@ export const PALETTE: Color[] = [
   '#6A5CFF', '#811E9F', '#B44AC0', '#FF3881'
 ];
 
-export const CANVAS_WIDTH = 1000;
-export const CANVAS_HEIGHT = 1000;
+export const CANVAS_WIDTH = 250;
+export const CANVAS_HEIGHT = 250;
 export const PIXEL_COOLDOWN = 10; // seconds
 
 export interface ViewportState {
@@ -158,7 +176,7 @@ export interface VisibleRegion {
 }
 
 export interface CanvasStore {
-  pixels: Map<string, string>; 
+  pixels: Map<string, string>;
   selectedColor: string;
   zoom: number;
   offset: { x: number; y: number };
@@ -170,6 +188,8 @@ export interface CanvasStore {
   cooldown: number;
   isPlacing: boolean;
   activeUsers: number;
+  isPreviewMode: boolean;
+  canvasMode: 'paint' | 'move';
 
   setPixel: (x: number, y: number, color: string) => void;
   loadCanvas: (pixels: Pixel[]) => void;
@@ -181,6 +201,8 @@ export interface CanvasStore {
   setCooldown: (seconds: number) => void;
   setIsPlacing: (isPlacing: boolean) => void;
   setActiveUsers: (count: number) => void;
+  setIsPreviewMode: (isPreviewMode: boolean) => void;
+  setCanvasMode: (mode: 'paint' | 'move') => void;
 }
 
 export interface ApiError {
