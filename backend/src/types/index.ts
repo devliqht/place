@@ -2,19 +2,34 @@ import { Request } from 'express';
 
 export interface User {
   id: number;
-  schoolId: string;
+  email: string;
+  passwordHash: string;
+  emailVerified: boolean;
+  verificationToken: string | null;
+  verificationExpiresAt: Date | null;
   createdAt: Date;
   lastSeen: Date;
   totalPixelsPlaced: number;
 }
 
 export interface UserCreate {
-  schoolId: string;
+  email: string;
+  password: string;
+}
+
+export interface UserRegister {
+  email: string;
+  password: string;
+}
+
+export interface UserLogin {
+  email: string;
+  password: string;
 }
 
 export interface JWTPayload {
   userId: number;
-  schoolId: string;
+  email: string;
   iat?: number;
   exp?: number;
 }
@@ -66,7 +81,7 @@ export interface SocketPixelUpdate {
   y: number;
   color: string;
   userId?: number;
-  schoolId?: string;
+  email?: string;
 }
 
 export interface Session {
@@ -78,7 +93,7 @@ export interface Session {
   lastActivity: Date;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -89,17 +104,29 @@ export interface LoginResponse {
   token: string;
   user: {
     id: number;
-    schoolId: string;
+    email: string;
+    emailVerified: boolean;
     createdAt: Date;
   };
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  email: string;
 }
 
 export interface VerifyResponse {
   valid: boolean;
   user?: {
     id: number;
-    schoolId: string;
+    email: string;
   };
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface PixelPlaceResponse {
@@ -112,10 +139,10 @@ export interface PixelPlaceResponse {
 
 export interface AdminLog {
   id: number;
-  adminSchoolId: string;
+  adminUserId: number;
   action: string;
   targetUserId?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   createdAt: Date;
 }
 
@@ -146,7 +173,7 @@ export interface AppConfig {
   canvasWidth: number;
   canvasHeight: number;
   pixelCooldown: number;
-  adminSchoolIds: string[];
+  adminEmails: string[];
 }
 
 export interface DatabaseConfig {
@@ -205,5 +232,5 @@ export interface InterServerEvents {
 
 export interface SocketData {
   userId?: number;
-  schoolId?: string;
+  email?: string;
 }
