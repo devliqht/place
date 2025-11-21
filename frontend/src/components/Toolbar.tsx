@@ -1,4 +1,4 @@
-import { ZoomIn, ZoomOut, RotateCcw, LogOut, Eye, EyeOff, Hand, Paintbrush } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, LogOut, Eye, EyeOff, Hand, Paintbrush, Shield, Grid, Tag, Info } from 'lucide-react';
 import { useEffect } from 'react';
 import { useStore } from '../store';
 import { PALETTE, CANVAS_WIDTH, CANVAS_HEIGHT } from '../types';
@@ -19,6 +19,15 @@ export const Toolbar = () => {
   const setIsPreviewMode = useStore((state) => state.setIsPreviewMode);
   const canvasMode = useStore((state) => state.canvasMode);
   const setCanvasMode = useStore((state) => state.setCanvasMode);
+  const showAdminPanel = useStore((state) => state.showAdminPanel);
+  const setShowAdminPanel = useStore((state) => state.setShowAdminPanel);
+  const showGrid = useStore((state) => state.showGrid);
+  const setShowGrid = useStore((state) => state.setShowGrid);
+  const showPixelLabels = useStore((state) => state.showPixelLabels);
+  const setShowPixelLabels = useStore((state) => state.setShowPixelLabels);
+  const setShowInfoModal = useStore((state) => state.setShowInfoModal);
+
+  const isAdmin = user?.isAdmin || false;
 
   const getMinZoom = () => {
     return Math.max(
@@ -59,25 +68,9 @@ export const Toolbar = () => {
     return () => clearInterval(interval);
   }, [cooldown, setCooldown]);
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      if (e.key === 'm' || e.key === 'M') {
-        setCanvasMode('move');
-      } else if (e.key === 'p' || e.key === 'P') {
-        setCanvasMode('paint');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [setCanvasMode]);
 
   const handleZoomIn = () => {
-    const newZoom = Math.min(10, zoom * 1.1);
+    const newZoom = Math.min(50, zoom * 1.2);
     const constrained = constrainOffset(offset.x, offset.y, newZoom);
     setZoom(newZoom);
     setOffset(constrained.x, constrained.y);
@@ -104,6 +97,32 @@ export const Toolbar = () => {
     setIsPreviewMode(!isPreviewMode);
   };
 
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        setCanvasMode('move');
+      } else if (e.key === 'p' || e.key === 'P') {
+        setCanvasMode('paint');
+      } else if (e.key === '=' || e.key === '+') {
+        e.preventDefault();
+        handleZoomIn();
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        handleZoomOut();
+      } else if (e.key === '0') {
+        e.preventDefault();
+        handleReset();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleZoomIn, handleZoomOut, handleReset, setCanvasMode]);
+
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-sm border-2 border-white px-3 py-2 shadow-2xl">
       {!isAuthenticated && (
@@ -111,6 +130,17 @@ export const Toolbar = () => {
       )}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1">
+          {isAdmin && (
+            <button
+              onClick={() => setShowAdminPanel(!showAdminPanel)}
+              className={`w-6 h-6 transition-colors flex items-center justify-center text-white ${
+                showAdminPanel ? 'bg-red-600' : 'bg-white/10 hover:bg-white/20'
+              }`}
+              title="Admin Panel"
+            >
+              <Shield size={14} />
+            </button>
+          )}
           <button
             onClick={() => setCanvasMode('move')}
             className={`w-6 h-6 transition-colors flex items-center justify-center text-white ${
@@ -162,26 +192,46 @@ export const Toolbar = () => {
             {isPreviewMode ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
           <button
+            onClick={() => setShowGrid(!showGrid)}
+            className={`w-6 h-6 transition-colors flex items-center justify-center text-white ${
+              showGrid ? 'bg-white/30' : 'bg-white/10 hover:bg-white/20'
+            }`}
+            title={showGrid ? 'Hide Grid' : 'Show Grid'}
+          >
+            <Grid size={14} />
+          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowPixelLabels(!showPixelLabels)}
+              className={`w-6 h-6 transition-colors flex items-center justify-center text-white ${
+                showPixelLabels ? 'bg-white/30' : 'bg-white/10 hover:bg-white/20'
+              }`}
+              title={showPixelLabels ? 'Hide Pixel Labels' : 'Show Pixel Labels'}
+            >
+              <Tag size={14} />
+            </button>
+          )}
+          <button
             onClick={handleZoomOut}
             className="w-6 h-6 bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"
-            title="Zoom Out"
+            title="Zoom Out (-)"
           >
             <ZoomOut size={14} />
           </button>
-          <span className="text-white text-xs font-mono w-10 text-center">
+          <span className="text-white text-xs font-mono min-w-[2.5rem] text-center">
             {(zoom * 100).toFixed(0)}%
           </span>
           <button
             onClick={handleZoomIn}
             className="w-6 h-6 bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"
-            title="Zoom In"
+            title="Zoom In (+)"
           >
             <ZoomIn size={14} />
           </button>
           <button
             onClick={handleReset}
             className="w-6 h-6 bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"
-            title="Reset"
+            title="Reset (0)"
           >
             <RotateCcw size={14} />
           </button>
@@ -194,6 +244,14 @@ export const Toolbar = () => {
             <div className="text-white text-xs font-mono">
               {user?.email}
             </div>
+
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="w-6 h-6 bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"
+              title="Information"
+            >
+              <Info size={14} />
+            </button>
 
             <button
               onClick={logout}

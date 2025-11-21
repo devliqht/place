@@ -9,6 +9,7 @@ export const Canvas = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
   const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number } | null>(null);
+  const [pixelInfo, setPixelInfo] = useState<{ email: string; placedAt: string } | null>(null);
   const [initialized, setInitialized] = useState(false);
 
   const getMinZoom = () => {
@@ -54,6 +55,9 @@ export const Canvas = () => {
   const isPlacing = useStore((state) => state.isPlacing);
   const setIsPlacing = useStore((state) => state.setIsPlacing);
   const setCooldown = useStore((state) => state.setCooldown);
+  const showGrid = useStore((state) => state.showGrid);
+  const showPixelLabels = useStore((state) => state.showPixelLabels);
+  const user = useStore((state) => state.user);
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -99,8 +103,25 @@ export const Canvas = () => {
       ctx.strokeRect(hoveredPixel.x, hoveredPixel.y, 1, 1);
     }
 
+    if (showGrid && !isPreviewMode && zoom > 2) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.lineWidth = 0.02;
+      for (let x = 0; x <= CANVAS_WIDTH; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CANVAS_HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= CANVAS_HEIGHT; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(CANVAS_WIDTH, y);
+        ctx.stroke();
+      }
+    }
+
     ctx.restore();
-  }, [pixels, zoom, offset, hoveredPixel, isPreviewMode]);
+  }, [pixels, zoom, offset, hoveredPixel, isPreviewMode, showGrid]);
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -128,7 +149,7 @@ export const Canvas = () => {
 
   useEffect(() => {
     drawCanvas();
-  }, [pixels, zoom, offset, hoveredPixel, isPreviewMode, drawCanvas]);
+  }, [pixels, zoom, offset, hoveredPixel, isPreviewMode, showGrid, drawCanvas]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -140,7 +161,7 @@ export const Canvas = () => {
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       const newZoom = zoom * delta;
       const minZoom = getMinZoom();
-      const constrainedZoom = Math.max(minZoom, Math.min(10, newZoom));
+      const constrainedZoom = Math.max(minZoom, Math.min(50, newZoom));
       const newOffset = constrainOffset(offset.x, offset.y, constrainedZoom);
       setZoom(constrainedZoom);
       setOffset(newOffset.x, newOffset.y);
@@ -225,6 +246,35 @@ export const Canvas = () => {
     }
   };
 
+  useEffect(() => {
+    const isAdmin = user?.isAdmin || false;
+    if (!showPixelLabels || !isAdmin || !hoveredPixel) {
+      setPixelInfo(null);
+      return;
+    }
+
+    let mounted = true;
+
+    const timeoutId = setTimeout(async () => {
+      const { adminApi } = await import('../services/api');
+      const response = await adminApi.getPixelInfo(hoveredPixel.x, hoveredPixel.y);
+
+      if (mounted && response.success && response.pixel) {
+        setPixelInfo({
+          email: response.pixel.email,
+          placedAt: response.pixel.placedAt,
+        });
+      } else if (mounted) {
+        setPixelInfo(null);
+      }
+    }, 200);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [hoveredPixel, showPixelLabels, user]);
+
   const handleMouseUp = () => {
     setIsDragging(false);
   };
@@ -256,6 +306,14 @@ export const Canvas = () => {
       {hoveredPixel && !isPreviewMode && (
         <div className="fixed top-2 right-2 bg-black/80 text-white px-2 py-1 border border-white font-mono text-xs backdrop-blur-sm">
           ({hoveredPixel.x}, {hoveredPixel.y})
+        </div>
+      )}
+      {pixelInfo && showPixelLabels && !isPreviewMode && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-black/90 text-white px-3 py-2 border border-white font-mono text-xs backdrop-blur-sm shadow-lg">
+          <div>{pixelInfo.email}</div>
+          <div className="text-gray-400 text-[10px] mt-1">
+            {new Date(pixelInfo.placedAt).toLocaleString()}
+          </div>
         </div>
       )}
     </>
