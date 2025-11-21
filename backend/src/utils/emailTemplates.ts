@@ -40,8 +40,7 @@ export function getVerificationEmailTemplate(
   const textTemplate = loadTemplate('verificationEmail.txt');
 
   const logoUrl =
-    data.logoUrl ||
-    `${process.env.FRONTEND_URL || 'http://localhost:5173'}/logo.svg`;
+    data.logoUrl || 'https://storage.googleapis.com/gdgoc_server/title.png';
 
   const templateData = {
     VERIFICATION_URL: data.verificationUrl,
