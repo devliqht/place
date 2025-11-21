@@ -3,6 +3,7 @@ export interface User {
   email: string;
   emailVerified: boolean;
   createdAt: string;
+  isAdmin?: boolean;
 }
 
 export interface RegisterRequest {
@@ -190,6 +191,10 @@ export interface CanvasStore {
   activeUsers: number;
   isPreviewMode: boolean;
   canvasMode: 'paint' | 'move';
+  showAdminPanel: boolean;
+  showGrid: boolean;
+  showPixelLabels: boolean;
+  showInfoModal: boolean;
 
   setPixel: (x: number, y: number, color: string) => void;
   loadCanvas: (pixels: Pixel[]) => void;
@@ -203,6 +208,10 @@ export interface CanvasStore {
   setActiveUsers: (count: number) => void;
   setIsPreviewMode: (isPreviewMode: boolean) => void;
   setCanvasMode: (mode: 'paint' | 'move') => void;
+  setShowAdminPanel: (show: boolean) => void;
+  setShowGrid: (show: boolean) => void;
+  setShowPixelLabels: (show: boolean) => void;
+  setShowInfoModal: (show: boolean) => void;
 }
 
 export interface ApiError {
@@ -218,10 +227,48 @@ export interface ServerToClientEvents {
   'pixel-batch': (data: SocketPixelUpdate[]) => void;
   'user-count': (data: SocketUserCount) => void;
   'cooldown-update': (data: SocketCooldownUpdate) => void;
+  'canvas-reload': () => void;
   error: (data: SocketError) => void;
 }
 
 export interface ClientToServerEvents {
   authenticate: (data: { token: string }) => void;
   'place-pixel': (data: PlacePixelRequest) => void;
+}
+
+export interface RecentPixel {
+  x: number;
+  y: number;
+  color: string;
+  email: string;
+  placedAt: string;
+}
+
+export interface AdminRecentPixelsResponse {
+  success: boolean;
+  pixels: RecentPixel[];
+}
+
+export interface AdminRevertPixelResponse {
+  success: boolean;
+  x: number;
+  y: number;
+  color: string | null;
+}
+
+export interface AdminDeleteUserPixelsResponse {
+  success: boolean;
+  deletedCount: number;
+  email: string;
+}
+
+export interface PixelInfoResponse {
+  success: boolean;
+  pixel: {
+    x: number;
+    y: number;
+    color: string;
+    email: string;
+    placedAt: string;
+  } | null;
 }

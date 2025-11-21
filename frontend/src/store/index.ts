@@ -16,6 +16,10 @@ export const useStore = create<CanvasStore>((set) => ({
   activeUsers: 0,
   isPreviewMode: false,
   canvasMode: 'paint',
+  showAdminPanel: false,
+  showGrid: false,
+  showPixelLabels: false,
+  showInfoModal: false,
 
   setPixel: (x: number, y: number, color: string) => {
     set((state) => {
@@ -37,7 +41,7 @@ export const useStore = create<CanvasStore>((set) => ({
 
   setSelectedColor: (color: string) => set({ selectedColor: color }),
 
-  setZoom: (zoom: number) => set({ zoom: Math.max(0.5, Math.min(10, zoom)) }),
+  setZoom: (zoom: number) => set({ zoom: Math.max(0.5, Math.min(50, zoom)) }),
 
   setOffset: (x: number, y: number) => set({ offset: { x, y } }),
 
@@ -48,7 +52,7 @@ export const useStore = create<CanvasStore>((set) => ({
 
   logout: () => {
     localStorage.removeItem('token');
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ user: null, token: null, isAuthenticated: false, showAdminPanel: false });
   },
 
   setCooldown: (seconds: number) => set({ cooldown: seconds }),
@@ -60,4 +64,12 @@ export const useStore = create<CanvasStore>((set) => ({
   setIsPreviewMode: (isPreviewMode: boolean) => set({ isPreviewMode }),
 
   setCanvasMode: (mode: 'paint' | 'move') => set({ canvasMode: mode }),
+
+  setShowAdminPanel: (show: boolean) => set({ showAdminPanel: show }),
+
+  setShowGrid: (show: boolean) => set({ showGrid: show }),
+
+  setShowPixelLabels: (show: boolean) => set({ showPixelLabels: show }),
+
+  setShowInfoModal: (show: boolean) => set({ showInfoModal: show }),
 }));

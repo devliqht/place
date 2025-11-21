@@ -59,6 +59,10 @@ class SocketService {
       this.emit('cooldown-update', data);
     });
 
+    this.socket.on('canvas-reload', () => {
+      this.emit('canvas-reload', null);
+    });
+
     this.socket.on('error', (data: SocketError) => {
       this.emit('error', data);
     });

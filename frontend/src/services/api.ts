@@ -147,3 +147,53 @@ export const healthApi = {
     }
   },
 };
+
+export const adminApi = {
+  getRecentPixels: async (limit = 50) => {
+    try {
+      const response = await api.get(`/api/admin/recent-pixels?limit=${limit}`);
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error.response?.data || { success: false, error: 'Failed to fetch recent pixels' };
+      }
+      return { success: false, error: 'Failed to fetch recent pixels' };
+    }
+  },
+
+  revertPixel: async (x: number, y: number) => {
+    try {
+      const response = await api.post('/api/admin/revert-pixel', { x, y });
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error.response?.data || { success: false, error: 'Failed to revert pixel' };
+      }
+      return { success: false, error: 'Failed to revert pixel' };
+    }
+  },
+
+  deleteUserPixels: async (email: string) => {
+    try {
+      const response = await api.post('/api/admin/delete-user-pixels', { email });
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error.response?.data || { success: false, error: 'Failed to delete user pixels' };
+      }
+      return { success: false, error: 'Failed to delete user pixels' };
+    }
+  },
+
+  getPixelInfo: async (x: number, y: number) => {
+    try {
+      const response = await api.get(`/api/admin/pixel-info?x=${x}&y=${y}`);
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error.response?.data || { success: false, error: 'Failed to get pixel info' };
+      }
+      return { success: false, error: 'Failed to get pixel info' };
+    }
+  },
+};
