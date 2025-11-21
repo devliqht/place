@@ -5,6 +5,8 @@ import { socketService } from './services/socket';
 import { Canvas } from './components/Canvas';
 import { Toolbar } from './components/Toolbar';
 import { WelcomeBar } from './components/WelcomeBar';
+import { AdminPanel } from './components/AdminPanel';
+import { InfoModal } from './components/InfoModal';
 import './styles/main.css';
 
 export const App = () => {
@@ -16,6 +18,15 @@ export const App = () => {
   const setPixel = useStore(state => state.setPixel);
   const setActiveUsers = useStore(state => state.setActiveUsers);
   const setCooldown = useStore(state => state.setCooldown);
+  const showInfoModal = useStore(state => state.showInfoModal);
+  const setShowInfoModal = useStore(state => state.setShowInfoModal);
+
+  useEffect(() => {
+    const dontShowAgain = localStorage.getItem('dontShowInfoModal');
+    if (!dontShowAgain) {
+      setShowInfoModal(true);
+    }
+  }, [setShowInfoModal]);
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -77,22 +88,41 @@ export const App = () => {
       console.error('Socket error:', errorData.message);
     };
 
+    const handleCanvasReload = async () => {
+      console.log('Canvas reload triggered');
+      const response = await canvasApi.getState();
+      if (response.success !== false && 'canvas' in response) {
+        console.log(
+          'Reloading canvas with',
+          response.canvas.pixels.length,
+          'pixels'
+        );
+        loadCanvas(response.canvas.pixels);
+      }
+    };
+
     socketService.on('pixel-update', handlePixelUpdate);
     socketService.on('pixel-batch', handlePixelBatch);
     socketService.on('user-count', handleUserCount);
     socketService.on('cooldown-update', handleCooldownUpdate);
+    socketService.on('canvas-reload', handleCanvasReload);
     socketService.on('error', handleError);
 
     return () => {
       socketService.disconnect();
     };
-  }, [token, setPixel, setActiveUsers, setCooldown]);
+  }, [token, setPixel, setActiveUsers, setCooldown, loadCanvas]);
 
   return (
     <>
       <Canvas />
       <Toolbar />
+      <AdminPanel />
       {!isAuthenticated && <WelcomeBar />}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </>
   );
 };
