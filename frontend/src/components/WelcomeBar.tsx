@@ -7,6 +7,8 @@ import { isApiError } from '../utils/typeGuards';
 
 type AuthView = 'login' | 'register' | 'verify-email';
 
+const REGISTRATION_ENABLED = import.meta.env.VITE_REGISTRATION_ENABLED === 'true';
+
 export const WelcomeBar = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [authView, setAuthView] = useState<AuthView>('login');
@@ -202,7 +204,9 @@ export const WelcomeBar = () => {
                   Welcome to DCISM Place
                 </h3>
                 <p className='text-gray-700 text-xs leading-tight'>
-                  Sign in with your USC email to start painting
+                  {REGISTRATION_ENABLED
+                    ? 'Sign in with your USC email to start painting'
+                    : 'Registration will open on Monday, Nov. 24'}
                 </p>
               </div>
               <button
@@ -217,7 +221,12 @@ export const WelcomeBar = () => {
             <div className='flex gap-2'>
               <button
                 onClick={() => setExpanded(true)}
-                className='bg-black text-white px-4 py-2 border-2 border-black hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm font-semibold'
+                disabled={!REGISTRATION_ENABLED}
+                className={`px-4 py-2 border-2 transition-colors flex items-center gap-2 text-sm font-semibold ${
+                  REGISTRATION_ENABLED
+                    ? 'bg-black text-white border-black hover:bg-gray-800'
+                    : 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                }`}
                 title='Sign In'
               >
                 <LogIn size={16} />
@@ -225,7 +234,12 @@ export const WelcomeBar = () => {
               </button>
               <button
                 onClick={switchToRegister}
-                className='bg-white text-black px-4 py-2 border-2 border-black hover:bg-gray-100 transition-colors flex items-center gap-2 text-sm font-semibold'
+                disabled={!REGISTRATION_ENABLED}
+                className={`px-4 py-2 border-2 transition-colors flex items-center gap-2 text-sm font-semibold ${
+                  REGISTRATION_ENABLED
+                    ? 'bg-white text-black border-black hover:bg-gray-100'
+                    : 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
+                }`}
                 title='Register'
               >
                 <UserPlus size={16} />
@@ -247,11 +261,14 @@ export const WelcomeBar = () => {
     <>
       <div className='fixed bottom-20 left-1/2 -translate-x-1/2 bg-white border-2 border-black p-6 z-50 max-w-md w-full'>
         <div className='flex justify-between items-start mb-4'>
+        <div className='flex flex-col'>
           <h3 className='font-bold text-black text-lg'>
             {authView === 'login' && 'Sign In'}
             {authView === 'register' && 'Create Account'}
             {authView === 'verify-email' && 'Email Verification'}
           </h3>
+          <p className='font-light text-black text-sm'>{authView === 'register' && 'You will be prompted with an email verification once you sign up.'}</p>
+        </div>
           {authView === 'login' && (
             <button
               onClick={() => setExpanded(false)}
