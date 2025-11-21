@@ -3,6 +3,8 @@ import { register, login, verifyEmail, resendVerification } from '@/services/aut
 import { authenticateToken } from '@/middleware/auth';
 import { loginLimiter } from '@/middleware/rateLimiter';
 import { AuthRequest } from '@/types';
+import { isAdmin } from '@/utils/validators';
+import { appConfig } from '@/config/env';
 
 const router = Router();
 
@@ -42,10 +44,15 @@ router.post('/login', loginLimiter, async (req: Request, res: Response) => {
     }
 
     const result = await login(email, password);
+    const userIsAdmin = isAdmin(email, appConfig.adminEmails);
 
     res.json({
       success: true,
-      ...result
+      ...result,
+      user: {
+        ...result.user,
+        isAdmin: userIsAdmin
+      }
     });
   } catch (error) {
     res.status(400).json({
@@ -57,13 +64,15 @@ router.post('/login', loginLimiter, async (req: Request, res: Response) => {
 
 router.get('/verify', authenticateToken, (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
+  const userIsAdmin = authReq.user?.email ? isAdmin(authReq.user.email, appConfig.adminEmails) : false;
 
   res.json({
     success: true,
     valid: true,
     user: {
       id: authReq.user?.userId,
-      email: authReq.user?.email
+      email: authReq.user?.email,
+      isAdmin: userIsAdmin
     }
   });
 });

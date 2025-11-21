@@ -2,15 +2,24 @@ import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { appConfig } from './config/env';
 import { testConnection } from './config/database';
 import { connectRedis, testRedisConnection } from './config/redis';
 import { initializeSocketIO } from './sockets';
-import { initializeEmailService, testEmailConnection } from './services/emailService';
+import {
+  initializeEmailService,
+  testEmailConnection,
+} from './services/emailService';
 import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/logger';
+import { validateOrigin } from './middleware/originValidator';
 import { logger } from './utils/logger';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import authRoutes from './routes/auth';
 import canvasRoutes from './routes/canvas';
@@ -32,6 +41,8 @@ app.use(express.json());
 app.use(requestLogger);
 app.use(globalLimiter);
 
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+
 app.get('/health', (_req, res) => {
   res.json({
     success: true,
@@ -40,11 +51,11 @@ app.get('/health', (_req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/canvas', canvasRoutes);
-app.use('/api/pixels', pixelRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/stats', statsRoutes);
+app.use('/api/auth', validateOrigin, authRoutes);
+app.use('/api/canvas', validateOrigin, canvasRoutes);
+app.use('/api/pixels', validateOrigin, pixelRoutes);
+app.use('/api/admin', validateOrigin, adminRoutes);
+app.use('/api/stats', validateOrigin, statsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -75,7 +86,9 @@ async function startServer() {
         logger.warn('Email service configured but connection test failed');
       }
     } else {
-      logger.warn('Email service not configured - email verification will not work');
+      logger.warn(
+        'Email service not configured - email verification will not work'
+      );
     }
 
     httpServer.listen(appConfig.port, () => {

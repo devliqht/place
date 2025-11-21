@@ -87,3 +87,129 @@ export async function logAdminAction(
     ]
   );
 }
+
+export async function revertPixel(x: number, y: number): Promise<string | null> {
+  const historyResult = await query(
+    `SELECT color, user_id
+     FROM pixel_history
+     WHERE x = $1 AND y = $2
+     ORDER BY placed_at DESC
+     LIMIT 2`,
+    [x, y]
+  );
+
+  if (historyResult.rows.length < 2) {
+    await query(
+      'DELETE FROM pixel_history WHERE x = $1 AND y = $2',
+      [x, y]
+    );
+
+    const { redisClient } = await import('@/config/redis');
+    const { REDIS_KEYS } = await import('@/config/constants');
+    await redisClient.hDel(REDIS_KEYS.CANVAS_STATE, `${x},${y}`);
+
+    return null;
+  }
+
+  const previousPixel = historyResult.rows[1];
+
+  await query(
+    'DELETE FROM pixel_history WHERE x = $1 AND y = $2 AND placed_at = (SELECT MAX(placed_at) FROM pixel_history WHERE x = $1 AND y = $2)',
+    [x, y]
+  );
+
+  const { setPixelColor } = await import('@/services/canvasService');
+  await setPixelColor(x, y, previousPixel.color);
+
+  return previousPixel.color;
+}
+
+export async function deleteUserPixels(email: string): Promise<number> {
+  const userResult = await query(
+    'SELECT id FROM users WHERE LOWER(email) = LOWER($1)',
+    [email]
+  );
+
+  if (userResult.rows.length === 0) {
+    throw new Error('User not found');
+  }
+
+  const userId = userResult.rows[0].id;
+
+  const pixelsResult = await query(
+    `SELECT DISTINCT ON (x, y) x, y, color
+     FROM pixel_history
+     WHERE user_id = $1
+     ORDER BY x, y, placed_at DESC`,
+    [userId]
+  );
+
+  const deleteResult = await query(
+    'DELETE FROM pixel_history WHERE user_id = $1',
+    [userId]
+  );
+
+  const { setPixelColor } = await import('@/services/canvasService');
+  const { redisClient } = await import('@/config/redis');
+  const { REDIS_KEYS } = await import('@/config/constants');
+
+  for (const pixel of pixelsResult.rows) {
+    const priorPixel = await query(
+      `SELECT color
+       FROM pixel_history
+       WHERE x = $1 AND y = $2 AND user_id != $3
+       ORDER BY placed_at DESC
+       LIMIT 1`,
+      [pixel.x, pixel.y, userId]
+    );
+
+    if (priorPixel.rows.length > 0) {
+      await setPixelColor(pixel.x, pixel.y, priorPixel.rows[0].color);
+    } else {
+      await redisClient.hDel(REDIS_KEYS.CANVAS_STATE, `${pixel.x},${pixel.y}`);
+    }
+  }
+
+  return deleteResult.rowCount || 0;
+}
+
+export async function getRecentPixels(limit = 50) {
+  const result = await query(
+    `SELECT
+      ph.x,
+      ph.y,
+      ph.color,
+      u.email,
+      ph.placed_at as "placedAt"
+    FROM pixel_history ph
+    JOIN users u ON ph.user_id = u.id
+    ORDER BY ph.placed_at DESC
+    LIMIT $1`,
+    [limit]
+  );
+
+  return result.rows;
+}
+
+export async function getPixelInfo(x: number, y: number) {
+  const result = await query(
+    `SELECT
+      ph.x,
+      ph.y,
+      ph.color,
+      u.email,
+      ph.placed_at as "placedAt"
+    FROM pixel_history ph
+    JOIN users u ON ph.user_id = u.id
+    WHERE ph.x = $1 AND ph.y = $2
+    ORDER BY ph.placed_at DESC
+    LIMIT 1`,
+    [x, y]
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}

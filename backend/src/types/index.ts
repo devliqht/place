@@ -218,6 +218,7 @@ export interface ServerToClientEvents {
   'pixel-batch': (data: SocketPixelUpdate[]) => void;
   'user-count': (data: { count: number }) => void;
   'cooldown-update': (data: { remainingSeconds: number }) => void;
+  'canvas-reload': () => void;
   error: (data: { message: string }) => void;
 }
 
